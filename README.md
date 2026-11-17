@@ -1,75 +1,68 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Senior Citizen System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel web application for managing senior citizen records, assistance requests, and benefit releases. Role-based access control separates administrative tools from the resident self-service portal.
 
-## About Laravel
+## Project Overview
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-## Senior Citizen System RBAC
-
-The application uses the `users.role` column for administrator and resident authorization:
-
-| Role | Access |
+| | |
 |---|---|
-| `super_admin` | Dashboard and all senior, assistance-request, and benefit-release management routes (legacy administrator account) |
-| `admin` | Dashboard and all senior, assistance-request, and benefit-release management routes |
-| `resident` | Their own profile and account settings; no management routes |
+| Framework | Laravel 12 |
+| Language | PHP 8.2+ |
+| Database | SQLite by default |
+| Front end | Blade, Vite, and Tailwind CSS |
 
-Unauthenticated users can access the login and registration pages. Logout and account settings require authentication. Newly registered accounts are always assigned `resident`; public form input cannot grant administrator access. The one-time role migration converts legacy `senior_user` accounts to `resident`. The `super_admin` role is treated as an administrator by explicitly allowing it in the admin route group for compatibility with existing accounts.
+### Main Features
 
-The parameterized `role` middleware is registered in `bootstrap/app.php` and accepts one or more comma-separated roles. Management routes combine `auth` with `role:admin,super_admin`; residents have a separate `/resident` dashboard and profile route group guarded by `auth` and `role:resident`. Guests are redirected to login before role checks, while authenticated users with disallowed roles receive HTTP 403 before the controller runs.
+- Admin dashboard with senior, pending assistance request, and benefit release summaries
+- Senior citizen records, assistance requests, and benefit release management
+- Resident dashboard and account profile
+- Registration, login, password reset, and account settings
+- Server-side role checks on protected routes
 
-Run `php artisan test tests/Feature/RoleAuthorizationTest.php` to verify guest redirects, administrator access, resident portal/profile access, and cross-role denial. This remains adapted to the Senior Citizen System: the application does not implement the separate BarangaySystem modules such as resident certificate requests, announcements, or blotter records. Administrative domain routes currently include `GET` and `POST` operations only.
+## Roles and Access
+
+| Feature / Route | Guest | `resident` | `admin` / `super_admin` |
+|---|:---:|:---:|:---:|
+| Login and registration (`/login`, `/register`) | Allowed | Redirected when signed in | Redirected when signed in |
+| Resident dashboard (`/resident/dashboard`) | Redirected to login | Allowed | Denied (`403`) |
+| Resident profile (`/resident/profile`) | Redirected to login | Own account only | Denied (`403`) |
+| Admin dashboard (`/dashboard`) | Redirected to login | Denied (`403`) | Allowed |
+| Senior records (`/seniors`) | Redirected to login | Denied (`403`) | Allowed |
+| Assistance requests (`/assistance-requests`) | Redirected to login | Denied (`403`) | Allowed |
+| Benefit releases (`/benefit-releases`) | Redirected to login | Denied (`403`) | Allowed |
+| Logout and account settings | Login required | Allowed | Allowed |
+
+Newly registered accounts are always assigned the `resident` role by the server; registration form input cannot grant administrator access. `super_admin` is retained for compatibility with existing administrator accounts.
+
+## Role-Based Access Control
+
+The `role` middleware is registered in `bootstrap/app.php`. Protected management routes use `auth` followed by `role:admin,super_admin`; resident routes use `auth` followed by `role:resident`. The middleware checks the authenticated user's role on the server and returns HTTP `403` for authenticated users without permission. Guests are redirected to login by the authentication middleware first.
+
+## Local Setup
+
+Requirements: PHP 8.2+, Composer, and Node.js/npm.
+
+From the project directory, run:
+
+```powershell
+composer install
+Copy-Item .env.example .env
+php artisan key:generate
+if (-not (Test-Path database\database.sqlite)) { New-Item -ItemType File database\database.sqlite | Out-Null }
+php artisan migrate
+npm install
+npm run build
+php artisan serve
+```
+
+The application will be available at `http://127.0.0.1:8000`. Configure `.env` for a different database or environment as needed. Do not commit `.env` or local database files.
+
+## Tests
+
+Run the role authorization feature tests:
+
+```powershell
+php artisan test tests/Feature/RoleAuthorizationTest.php
+```
+
+The tests cover guest redirects, administrator access, resident access to their own portal, and cross-role denial for management and resident routes.
